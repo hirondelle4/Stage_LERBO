@@ -1,3 +1,15 @@
+##### Requirements #######
+
+pycoQC : Leger, A. & Leonardi, T. pycoQC, interactive quality control for Oxford Nanopore Sequencing. JOSS 4, 1236 (2019).
+NanoFilt : De Coster, W., D’Hert, S., Schultz, D. T., Cruts, M. & Van Broeckhoven, C. NanoPack: visualizing and processing long-read sequencing data. Bioinformatics 34, 2666–2669 (2018).
+filtlong : https://github.com/rrwick/Filtlong
+vsearch : Rognes, T., Flouri, T., Nichols, B., Quince, C. & Mahé, F. VSEARCH: a versatile open source tool for metagenomics. PeerJ 4, (2016).
+minimap2 : Li, H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics 34, 3094–3100 (2018).
+Racon : Vaser, R., Sović, I., Nagarajan, N. & Šikić, M. Fast and accurate de novo genome assembly from long uncorrected reads. Genome Res 27, 737–746 (2017).
+Medaka : https://github.com/nanoporetech/medaka
+Porechop : https://github.com/rrwick/Porechop
+
+
 dir=$(pwd) ## Affectation de la localisation du répertoire
 echo $dir ## localisation du répertoire
 
