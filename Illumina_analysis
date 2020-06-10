@@ -1,0 +1,177 @@
+#############Requirements#################
+
+fastQC : Andrews, S. Babraham Bioinformatics - FastQC A Quality Control tool for High Throughput Sequence Data. http://www.bioinformatics.babraham.ac.uk/projects/fastqc/ (2010).
+multiQC : Ewels, P., Magnusson, M., Lundin, S. & Käller, M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics 32, 3047–3048 (2016).
+Trimmomatic : Bolger, A. M., Lohse, M. & Usadel, B. Trimmomatic: a flexible trimmer for Illumina sequence data. Bioinformatics 30, 2114–2120 (2014).
+Minimap2 : minimap2 : Li, H. Minimap2: pairwise alignment for nucleotide sequences. Bioinformatics 34, 3094–3100 (2018).
+SAMtools : Li, H. A statistical framework for SNP calling, mutation discovery, association mapping and population genetical parameter estimation from sequencing data. Bioinformatics 27, 2987–2993 (2011).
+VarScan2 : Koboldt, D. C. et al. VarScan 2: somatic mutation and copy number alteration discovery in cancer by exome sequencing. Genome Res. 22, 568–576 (2012).
+
+
+dir=$(pwd) ## Affectation de la localisation du répertoire
+echo $dir ## localisation du répertoire
+
+data='/path/to/data' ## Champ à modifier : localisation des données '.fastq.gz' 
+
+#### Si les données sont barcodés, renommer les fichiers selon le nom de leur provenance
+
+## Creer son espace de travail
+day=$(date +"%m-%d-%Y")
+mkdir ${dir}/Working_space_illumina_${day}/
+
+## déplacer les données '.fastq.gz' dans l'espace de travail
+mv $data ${dir}/Working_space_illumina_${day}/
+
+## se positionner dans l'espace avec les données d'illumina
+cd ${dir}/Working_space_illumina_${day}/${data}/
+
+## créer une variable pour récupérer les noms des fichiers
+ECH=$(ls *.fastq.gz | sed 's/_R[1,2]_001.fastq.gz//g')
+
+echo $ECH
+
+
+###### Analyse des fichiers '.fastq.gz'
+cd ${dir}/Working_space_illumina_${day}/ 
+mkdir 00_fastqc
+
+. /path/to/fastqc/0.11.8/env.sh ### activate l'environnement conda de fastcqc v. 0.11.8
+
+for file in $ECH 
+do
+  fastqc -o ${dir}/Working_space_illumina_${day}/00_fastqc ${dir}/Working_space_illumina_${day}/${data}/${file}_R1_001.fastq.gz \
+   ${dir}/Working_space_illumina_${day}/${data}/${file}_R2_001.fastq.gz
+done
+
+#####Résumé le tout dans un même fichier HTML
+
+. /path/to/multiqc/1.8/env.sh ### activate l'environnement conda de multiqc v. 1.8
+
+cd ${dir}/Working_space_illumina_${day}/00_fastqc 
+
+multiqc .
+
+####### Filtration et appariemment des données illumina 
+cd ${dir}/Working_space_illumina_${day}/ 
+mkdir 01_trimmomatic
+
+java='/path/to/trimmmomatic/conda-env/trimmomatic-0.36/bin/java' ### pour lancer java 
+trimmomatic='/path/to/jar/trimmomatics/conda-env/trimmomatic-0.36/share/trimmomatic/trimmomatic.jar'
+adapters='/path/to/adapters/trimmomatic/conda-env/trimmomatic-0.36/share/trimmomatic/adapters/NexteraPE-PE.fa'
+
+for file in ${ECH}
+do
+$java -jar $trimmomatic PE \
+        ${dir}/Working_space_illumina_${day}/${data}/${file}_R1_001.fastq.gz \
+        ${dir}/Working_space_illumina_${day}/${data}/${file}_R2_001.fastq.gz \
+        ${dir}/Working_space_illumina_${day}/01_trimmomatic/${file}_R1_001_forward_paired.fq.gz \
+        ${dir}/Working_space_illumina_${day}/01_trimmomatic/${file}_R1_001_unpaired.fq.gz \
+        ${dir}/Working_space_illumina_${day}/01_trimmomatic/${file}_R2_001_reverse_paired.fq.gz \
+        ${dir}/Working_space_illumina_${day}/01_trimmomatic/${file}_R2_001_unpaired.fq.gz \
+        ILLUMINACLIP:${adapters}:2:30:10 SLIDINGWINDOW:1:25
+done
+
+####### Mapping par minimap2
+cd ${dir}/Working_space_illumina_${day}/ 
+mkdir 02_mapping
+
+. /path/to/minimap2/2.9/env.sh ### activate l'environnement conda de minimap2 v. 2.9
+NCPUS=28 ## a modifier selon les capacités computationnelles
+
+REF='${dir}/name/of/Working_space_ont/final/fasta' ### Entrer la localisation des séquences référentes 
+
+
+for file in ${ECH}
+do
+
+  prefix=$(echo ${file} | sed 's/_S[0-9][0-9]*_L001//' )
+  minimap2 -t $NCPUS -ax sr $REF/${prefix}_ont.fasta \
+  ${dir}/Working_space_illumina_${day}/01_trimmomatic/${file}_R1_001_forward_paired.fq.gz \
+  ${dir}/Working_space_illumina_${day}/01_trimmomatic/${file}_R2_001_reverse_paired.fq.gz \
+  > ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.bam
+
+done
+
+####### Marquer duplication PCR 
+
+. /path/to/samtools/1.9/env.sh ### activate l'environnement conda de samtools v. 1.9
+REF='${dir}/name/of/Working_space_ont/final/fasta' ### Entrer la localisation des séquences référentes 
+
+
+for file in $ECH
+do
+  
+  prefix=$(echo ${file} | sed 's/_S[0-9][0-9]*_L001//' )
+  
+  samtools faidx $REF/${prefix}_ont.fasta
+
+  samtools sort -n ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.bam -o ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.bam
+
+  samtools fixmate -m ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.bam ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.fixmate.bam
+
+  samtools sort ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.fixmate.bam -o ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.fixmate.position.bam
+
+  samtools markdup -r ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.fixmate.position.bam  ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.fixmate.position.markdup.bam
+  
+  samtools index ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.fixmate.position.markdup.bam
+  
+  samtools flagstat ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.fixmate.position.markdup.bam > ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mappingsstats.txt
+
+  rm ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.fixmate.position.bam
+  rm ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.fixmate.bam
+  rm ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.bam
+  rm ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.bam
+  
+done
+
+
+#### generation de mpileup et Variant calling
+cd ${dir}/Working_space_illumina_${day}/ 
+mkdir 03_varscan
+
+varscan='/path/to/VarScan/jar/VarScan.v2.4.4.jar'
+java='/path/to/executable/java'
+
+for file in $ECH
+do 
+  prefix=$(echo ${file} | sed 's/_S[0-9][0-9]*_L001//' )
+
+  samtools mpileup -f $REF/${prefix}_ont.fasta ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.fixmate.position.markdup.bam | $java -jar $varscan pileup2snp--p-value 0.01 --min-var-freq 0.0099 > ${dir}/Working_space_illumina_${day}/03_varscan/${prefix}_SNP.tsv                                                                                                                                                                                                                                           
+  samtools mpileup -f $REF/${prefix}_ont.fasta ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.fixmate.position.markdup.bam | $java -jar $varscan pileup2indel --p-value 0.01 --min-var-freq 0.0099 > ${dir}/Working_space_illumina_${day}/03_varscan/${prefix}_INDEL.tsv                                                                                                                                        
+  samtools mpileup -f $REF/${prefix}_ont.fasta ${dir}/Working_space_illumina_${day}/02_mapping/${prefix}_mapped_by_q25.sorted.fixmate.position.markdup.bam | $java -jar $varscan pileup2cns --p-value 0.01 --min-var-freq 0.0099 > ${dir}/Working_space_illumina_${day}/03_varscan/${prefix}_CNS.tsv 
+
+done
+
+
+###### Reconstruction Sequences variants polymorphes
+cd ${dir}/Working_space_illumina_${day}/ 
+mkdir 04_seq_inform
+
+for file in $ECH
+do
+
+  prefix=$(echo ${file} | sed 's/_S[0-9][0-9]*_L001//' )
+  
+  
+	awk -F"\t" 'BEGIN{print ">'${prefix}'"}
+	{
+		if(NR>2){{gsub(/[\*\+-].*\/[\+-]/,"",$4)}
+			{gsub(/%/, "", $7)} 
+			if($4 ~ /\/\+/ and $7 > 90){
+				printf $3$4
+			}
+		else if($4 ~ /\/-/ and  $7 > 90 ){
+		printf $3 
+		NR++
+		}
+		else if($4 ~ /\// and $7 < 90){
+			printf $3
+		}
+else 
+	{
+		printf $4
+	}}}END{print '\n'}' ${dir}/Working_space_illumina_${day}/03_varscan/${prefix}_CNS.tsv | sed 's/-//g' >  ${dir}/Working_space_illumina_${day}/04_seq_inform/${prefix}_SCAN.fa
+  
+done
+
+
