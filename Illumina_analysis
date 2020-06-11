@@ -13,8 +13,6 @@ echo $dir ## localisation du répertoire
 
 data='/path/to/data' ## Champ à modifier : localisation des données '.fastq.gz' 
 
-#### Si les données sont barcodés, renommer les fichiers selon le nom de leur provenance
-
 ## Creer son espace de travail
 day=$(date +"%m-%d-%Y")
 mkdir ${dir}/Working_space_illumina_${day}/
