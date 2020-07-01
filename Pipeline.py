@@ -19,4 +19,4 @@ rule qualityC:
     conda:
         "/home/hirondelle/miniconda3/envs/pycoqc.yaml"
     shell:
-        "pycoQC  --summary_file {input} --html_outfile {output} --min_pass_qual 10"
+        "pycoQC  --summary_file {input} --html_outfile {output} --min_pass_qual 10 2> {log}"
