@@ -6,13 +6,13 @@
 ########################################################
 rule all:
     input:
-        "./qualityC/pycoQC_output_min_pass_q10.html"
+        "qualityC/pycoQC_output_min_pass_q10.html"
 
 rule qualityC:
     input:
-        "./sequencing_summary.txt"
+        "sequencing_summary.txt"
     output:
-        "./qualityC/pycoQC_output_min_pass_q10.html"
+        "qualityC/pycoQC_output_min_pass_q10.html"
     threads: 8
     conda:
         "envs/pycoqc.yaml"
