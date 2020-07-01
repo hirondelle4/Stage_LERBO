@@ -15,6 +15,6 @@ rule qualityC:
         "qualityC/pycoQC_output_min_pass_q10.html"
     threads: 8
     conda:
-        "envs/pycoqc.yaml"
+        "/home/hirondelle/miniconda3/envs/pycoqc.yaml"
     shell:
         "pycoQC  --summary_file {input} --html_outfile {output} --min_pass_qual 10"
