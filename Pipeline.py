@@ -14,6 +14,8 @@ rule qualityC:
     output:
         "qualityC/pycoQC_output_min_pass_q10.html"
     threads: 8
+    log:
+        "logs/qualityC/pycoQC.log"
     conda:
         "/home/hirondelle/miniconda3/envs/pycoqc.yaml"
     shell:
