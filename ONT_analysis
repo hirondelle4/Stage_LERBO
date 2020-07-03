@@ -13,7 +13,7 @@ Porechop : https://github.com/rrwick/Porechop
 dir=$(pwd) ## Affectation de la localisation du répertoire
 echo $dir ## localisation du répertoire
 
-data='/path/to/data' ## Champ à modifier : localisation des données '.fastq.gz' 
+data='/path/to/data' ## Champ à modifier : localisation des données '.fastq.gz'
 
 #### Si les données sont barcodés, renommer les fichiers selon le nom de leur provenance
 
@@ -31,8 +31,8 @@ cd ${dir}/Working_space_ont_${day}/${data}/
 ech=$(ls *.fastq.gz | sed 's/.fastq.gz//')
 echo $ech
 
-######### Analyse statistique par PycoQC 
-cd ${dir}/Working_space_ont_${day}/ 
+######### Analyse statistique par PycoQC
+cd ${dir}/Working_space_ont_${day}/
 mkdir 00_pycoqc
 
 . /path/to/pycoqc/2.5.0.19/env.sh ## à modifier : activation du chemin d'accès à l'environnement conda pycoQC v. 2.5.0.19
@@ -43,16 +43,16 @@ pycoQC  --summary_file $summary\
         --min_pass_qual 10
 
 ######### Filtration des données '.fastq.gz'
-cd ${dir}/Working_space_ont_${day}/ 
+cd ${dir}/Working_space_ont_${day}/
 mkdir 01_nanofilt
 
 . /path/to/nanofilt/2.6.0/env.sh ## à modifier : activation du chemin d'accès à l'environnement conda nanoFilt v. 2.6.0
 
    ## Créer le répertoire pour l'étape de filtration des reads
-cd ${dir}/Working_space_ont_${day}/ 
+cd ${dir}/Working_space_ont_${day}/
 mkdir 01_nanofilt
 
-min_length=5120 ## choix de la longueur minimale 
+min_length=5120 ## choix de la longueur minimale
 max_length=5960 ## choix de la longueur maximale
 quality=11 ## choix d'un seuil qualité
 summary='/path/to/summary/file/sequencing_summary.txt' ## à modifier
@@ -85,8 +85,8 @@ mkdir 03_vsearch
 
   ##translate fastq.gz to fasta
 for file in $ech
-do 
-    zcat ${dir}/Working_space_ont_${day}/02_filtlong/${file}_filt_set.fastq.gz | paste - - - - | cut -f 1,2 | sed 's/^@/>/' | tr "\t" "\n" > ${dir}/Working_space_ont_${day}/02_filtlong/${file}_filt_set.fasta   
+do
+    zcat ${dir}/Working_space_ont_${day}/02_filtlong/${file}_filt_set.fastq.gz | paste - - - - | cut -f 1,2 | sed 's/^@/>/' | tr "\t" "\n" > ${dir}/Working_space_ont_${day}/02_filtlong/${file}_filt_set.fasta
 done
 
   ##generation d'une clusterisation pour eliminer de potentiels contaminants et générer un consensus
@@ -96,31 +96,31 @@ perc_id=0.84 ## choix d'un seuil de distance pour le rassemblement (dependant du
 . /path/to/vsearch/2.14.2/env.sh ## à modifier : activation du chemin d'accès à l'environnement conda vsearch 2.14.2
 
 for file in $ech
-do 
+do
     vsearch --cluster_size ${dir}/Working_space_ont_${day}/02_filtlong/${file}_filt_set.fasta  --id $perc_id --strand both \
     --consout ${dir}/Working_space_ont_${day}/03_vsearch/consensus_"${file}".fasta \
-    --clusters 02_vsearch/${file}_set_cluster_ --fasta_width 0 
-    
-    ## garder et renommer le premier cluster 
-    
-    awk '/^>/{print ">'${file}'_consensus_vsearch"; next}{print $0}' ${dir}/Working_space_ont_${day}/03_vsearch/consensus_${file}.fasta | head -2 > ${dir}/Working_space_ont_${day}/03_vsearch/sequence_${file}_consensus.fasta  
+    --clusters 02_vsearch/${file}_set_cluster_ --fasta_width 0
+
+    ## garder et renommer le premier cluster
+
+    awk '/^>/{print ">'${file}'_consensus_vsearch"; next}{print $0}' ${dir}/Working_space_ont_${day}/03_vsearch/consensus_${file}.fasta | head -2 > ${dir}/Working_space_ont_${day}/03_vsearch/sequence_${file}_consensus.fasta
 
     ## Orienter tous les fichiers dans le sens Forward
-    ${dir}/Working_space_ont_${day}/03_vsearch/sequence_${file}_consensus.fasta | while read L
-    do 
+    cat ${dir}/Working_space_ont_${day}/03_vsearch/sequence_${file}_consensus.fasta | while read L
+    do
     if [[ $L =~ ^'>' ]]
-    then 
+    then
     echo $L >> ${dir}/Working_space_ont_${day}/03_vsearch/sequence_${file}_consensus_forward.fasta
     else if [[ $L =~ "GGAAGAGCCGACATCGA" ]]
-      then 
+      then
       echo $L | tr ATCG TAGC | rev >> ${dir}/Working_space_ont_${day}/03_vsearch/sequence_${file}_consensus_forward.fasta
-      else 
-      echo $L >> ${dir}/Working_space_ont_${day}/03_vsearch/sequence_${file}_consensus_forward.fasta 
+      else
+      echo $L >> ${dir}/Working_space_ont_${day}/03_vsearch/sequence_${file}_consensus_forward.fasta
       fi
     fi
     done >& run.log
-    
-done 
+
+done
 
 
 ###### Creation du fichier de chevauchements reads contre reférence
@@ -131,16 +131,16 @@ mkdir 04_minimap2
 NCPUS=28 ## ressource informatique à modifier selon les possibilités computationnelles
 
 for file in $ech
-do 
+do
   minimap2 -x ava-ont -t $NCPUS  \
         ${dir}/Working_space_ont_${day}/03_vsearch/sequence_${file}_consensus_forward.fasta \
         ${dir}/Working_space_ont_${day}/01_nanofilt/${file}_filt.fastq.gz \
         > ${dir}/Working_space_ont_${day}/04_Minimap2/${file}_ovlp_ref_mmp2.paf
-        
+
         chmod u+x ${dir}/Working_space_ont_${day}/04_Minimap2/${file}_ovlp_ref_mmp2.paf  ### activation droits d'accès
 done
 
-###### Rapide Consensus 
+###### Rapide Consensus
 cd ${dir}/Working_space_ont_${day}/
 mkdir 05_racon
 . path/to/racon/1.4.10/env.sh ## activation du chemin d'accès à l'environnement conda racon v. 1.4.10
@@ -168,8 +168,8 @@ for file in $ech
 do
   medaka_consensus -i ${dir}/Working_space_ont_${day}/01_nanofilt/${file}_filt.fastq.gz \
         -d ${dir}/Working_space_ont_${day}/05_racon/${file}_Racon.fasta -t $NCPUS \
-        -o ${dir}/Working_space_ont_${day}/06_medaka/${file}_Medaka/ -m r941_min_high_g344 
-        
+        -o ${dir}/Working_space_ont_${day}/06_medaka/${file}_Medaka/ -m r941_min_high_g344
+
   cp ${dir}/Working_space_ont_${day}/06_medaka/${file}_Medaka/consensus.fasta ${dir}/Working_space_ont_${day}/06_medaka/${file}_medaka.fasta
   cat ${dir}/Working_space_ont_${day}/06_medaka/${file}_medaka.fasta | awk '/^>/{print ">'${file}'_medaka" ; next }{print $0} > ${dir}/Working_space_ont_${day}/06_medaka/${file}_medaka_RN.fasta
 done
@@ -181,8 +181,6 @@ mkdir 07_porechop
 . path/to/porechop/0.2.4/env.sh ## activation du chemin d'accès à l'environnement conda porechop v. 0.2.4
 
 for file in $ech
-do  
+do
   porechop -i ${dir}/Working_space_ont_${day}/06_medaka/${file}_medaka_RN.fasta -o ${dir}/Working_space_ont_${day}/07_porechop/${file}_ont.fasta
 done
-
-
