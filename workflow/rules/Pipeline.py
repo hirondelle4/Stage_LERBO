@@ -34,7 +34,7 @@ rule qualityC:
 
 rule rename:
     input:
-        fastq = lambda w: df.samplesID[w.sample, 'Barcodes']
+        fastq = lambda w: df[df.samplesID == w.sample].fastq.tolist()
     output:
         "data/{sample}.fastq.gz"
     shell:
