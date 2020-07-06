@@ -17,7 +17,7 @@ barcodesID=pd.read_table(samples_names)['Barcodes']
 rule all:
     input:
         "qualityC/pycoQC_output_min_pass_q10.html"
-        expand("{sample}", sample=[config['samples'][x] for x in config['samples']])
+        expand("{sample}", sample=[samples_names[x] for x in samples_names])
 
 rule qualityC:
     input:
@@ -36,6 +36,6 @@ rule rename:
     input:
         fastq = lambda w: df.samplesID[w.sample, 'Barcodes']
     output:
-        "{sample}"
+        "data/{sample}.fastq.gz"
     shell:
-        """echo mv data/{input}.fastq.gz data/{output}.fastq.gz"""
+        """echo mv data/{input}.fastq.gz {output}""
