@@ -10,12 +10,14 @@ configfile: "config.yaml"
 
 samples_names = config["samples_names"]
 
+df=pd.read_table(samples_names)
 samplesID=pd.read_table(samples_names)['names']
 barcodesID=pd.read_table(samples_names)['Barcodes']
 
 rule all:
     input:
         "qualityC/pycoQC_output_min_pass_q10.html"
+        expand("data/{sample}.fastq.gz", sample=[config['samples'][x] for x in config['samples']])
 
 rule qualityC:
     input:
@@ -32,8 +34,8 @@ rule qualityC:
 
 rule rename:
     input:
-
+        fastq = lambda w: df.samplesID[w.sample, 'Barcodes']
     output:
-
+        "{sample}"
     shell:
-        mv data/{input.before}.fastq.gz data/{output.after}.fastq.gz
+        """echo mv data/{input}.fastq.gz data/{output}.fastq.gz"""
