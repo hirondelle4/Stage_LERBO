@@ -4,7 +4,14 @@
 ## mamba create -c conda-forge -c bioconda -n snakemake snakemake
 
 ########################################################
+import pandas as pd
+
 configfile: "config.yaml"
+
+samples_names = config["samples_names"]
+
+samplesID=pd.read_table(samples_names)['names']
+barcodesID=pd.read_table(samples_names)['Barcodes']
 
 rule all:
     input:
@@ -25,8 +32,8 @@ rule qualityC:
 
 rule rename:
     input:
-        a="{datasets}"
-        b="{samples_names}"
+
     output:
-        "resources/{samples}"
+
     shell:
+        mv data/{input.before}.fastq.gz data/{output.after}.fastq.gz

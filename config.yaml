@@ -1,0 +1,5 @@
+summary_directory:
+  resources/sequencing_summary.txt
+
+samples_names:
+  data/samples_names.tsv
