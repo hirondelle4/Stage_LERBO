@@ -11,8 +11,8 @@ configfile: "config.yaml"
 samples_names = config["samples_names"]
 
 df=pd.read_table(samples_names)
-samplesID=pd.read_table(samples_names)['Names']
-barcodesID=pd.read_table(samples_names)['Barcodes']
+samplesID=pd.read_table(samples_names, " ")['Names']
+barcodesID=pd.read_table(samples_names, " "")['Barcodes']
 
 rule all:
     input:
