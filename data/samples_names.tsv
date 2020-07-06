@@ -1,7 +1,7 @@
 ############Correspondances des barcodes#############
 #### Pour chaque barcode souhaité, indiquer le nom en face (séparé par un espace)
 #### /!\ Na pas oublier d'y enlever le caractère '#'
-Barcodes  Names
+Barcodes Names
 barcode01 A7_BC07_CBD2_191109_LF_LIB
 #barcode02
 #barcode03
