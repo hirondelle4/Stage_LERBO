@@ -1,0 +1,3 @@
+NameError in line 14 of /mnt/c/Users/merci/github/Stage_LERBO/workflow/rules/Pipeline.py:
+name 'Names' is not defined
+  File "/mnt/c/Users/merci/github/Stage_LERBO/workflow/rules/Pipeline.py", line 14, in <module>
