@@ -38,4 +38,4 @@ rule rename:
     output:
         "data/{sample}.fastq.gz"
     shell:
-        """echo mv data/{input}.fastq.gz {output}""
+        """echo mv data/{input.fastq}.fastq.gz {output}""
