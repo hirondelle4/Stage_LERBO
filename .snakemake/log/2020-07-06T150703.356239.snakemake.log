@@ -1,0 +1,9 @@
+KeyError in line 14 of /mnt/c/Users/merci/github/Stage_LERBO/workflow/rules/Pipeline.py:
+'names'
+  File "/mnt/c/Users/merci/github/Stage_LERBO/workflow/rules/Pipeline.py", line 14, in <module>
+  File "/home/hirondelle/miniconda3/lib/python3.7/site-packages/pandas/core/frame.py", line 2800, in __getitem__
+  File "/home/hirondelle/miniconda3/lib/python3.7/site-packages/pandas/core/indexes/base.py", line 2648, in get_loc
+  File "pandas/_libs/index.pyx", line 111, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/index.pyx", line 138, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/hashtable_class_helper.pxi", line 1619, in pandas._libs.hashtable.PyObjectHashTable.get_item
+  File "pandas/_libs/hashtable_class_helper.pxi", line 1627, in pandas._libs.hashtable.PyObjectHashTable.get_item
