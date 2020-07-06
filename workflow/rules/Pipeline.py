@@ -16,7 +16,7 @@ barcodesID=pd.read_table(samples_names)['Barcodes']
 
 rule all:
     input:
-        "qualityC/pycoQC_output_min_pass_q10.html"
+        "qualityC/pycoQC_output_min_pass_q10.html",
         expand("data/{sample}.fastq.gz", sample=SAMPLESID)
 
 rule qualityC:
