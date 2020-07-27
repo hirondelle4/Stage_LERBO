@@ -61,7 +61,7 @@ read_type='1D'
 for file in $ech
 do
 #fi=$(echo ${file} | sed 's/_q[0-9][0-9]*//' )
-gunzip -c ${dir}/Working_space_ont_${day}/${data}/${file}.fastq.gz | NanoFilt -l $min_length --max_length $max_length  \
+gunzip -c ${dir}/Working_space_ont_${day}/${data}/${file}.fastq.gz | NanoFilt -l $min_length --maxlength $max_length  \
         -s $summary  \
         -q $quality --readtype $read_type | gzip > ${dir}/Working_space_ont_${day}/01_nanofilt/${file}_filt.fastq.gz
 done
