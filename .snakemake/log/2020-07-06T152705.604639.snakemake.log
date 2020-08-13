@@ -1,4 +1,0 @@
-KeyError in line 14 of /mnt/c/Users/merci/github/Stage_LERBO/workflow/rules/Pipeline.py:
-"None of ['Barcodes'] are in the columns"
-  File "/mnt/c/Users/merci/github/Stage_LERBO/workflow/rules/Pipeline.py", line 14, in <module>
-  File "/home/hirondelle/miniconda3/lib/python3.7/site-packages/pandas/core/frame.py", line 4303, in set_index
